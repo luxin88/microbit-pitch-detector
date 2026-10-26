@@ -10,8 +10,12 @@
 const SHOW_HZ_DEBUG = false  // true: 串口输出检测到的主频, 便于调试
 const MIN_HZ = 65            // 扫描下限 (C2)
 const MAX_HZ = 1000          // 扫描上限
-const LEVEL_GATE = 60        // input.soundLevel() 低于此值视为静音 (0~255)
 const SENSITIVITY = 1.0      // 麦克风灵敏度: 声音小调大 (如 2.0)
+
+// ===== 静音门限: 共 10 档, 按 A 减小 / 按 B 增大 (默认第 4 档) =====
+const GATE_LEVELS = [20, 30, 40, 55, 70, 90, 110, 135, 160, 190]
+let gateLevel = 3            // 当前档位索引 0..9 (soundLevel 门限 = GATE_LEVELS[档位])
+let gateDisplayTicks = 0     // >0 时临时显示当前档位数字
 
 const FS = micfft.sampleRate()  // 11000
 
@@ -78,9 +82,27 @@ let stableDeg = 0   // 当前显示的度数
 let candDeg = 0     // 候选度数
 let candCount = 0   // 候选连续帧数 (防闪跳: 连续 2 帧相同才切换)
 
+// 按 A 减小门限 / 按 B 增大门限, 共 10 档 (对应 soundLevel 20~190)
+function bumpGate(delta: number) {
+    gateLevel = Math.min(GATE_LEVELS.length - 1, Math.max(0, gateLevel + delta))
+    candDeg = 0
+    candCount = 0
+    gateDisplayTicks = 6   // 显示约 6 帧当前档位
+}
+input.onButtonPressed(Button.A, function () { bumpGate(-1) })
+input.onButtonPressed(Button.B, function () { bumpGate(1) })
+
 basic.forever(function () {
-    // 静音门限: 安静时熄屏, 避免噪声乱跳
-    if (input.soundLevel() < LEVEL_GATE) {
+    // 门限档位临时显示窗口
+    if (gateDisplayTicks > 0) {
+        gateDisplayTicks--
+        basic.showNumber(gateLevel + 1, 60)
+        pause(120)
+        return
+    }
+
+    // 静音判断: soundLevel 低于当前档位门限则熄屏, 避免噪声乱跳
+    if (input.soundLevel() < GATE_LEVELS[gateLevel]) {
         stableDeg = 0
         candDeg = 0
         candCount = 0
