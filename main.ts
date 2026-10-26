@@ -19,6 +19,9 @@ const FS = micfft.sampleRate()  // 11000
 // 黑键吸附到左侧白键 (C#->1, D#->2, F#->4, G#->5, A#->6)
 const PC_TO_DEGREE = [1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6, 7]
 
+// MakeCode 的 TS 子集没有 Math.log2, 用 Math.log 换底缓存
+const LOG2 = Math.log(2)
+
 /**
  * Goertzel 算法: 计算 buf 在 freq 处的频谱功率
  * 等价于 DFT/FFT 的单频点输出, 扫多个频点即得到频谱
@@ -66,7 +69,7 @@ function detectFrequency(buf: Buffer): number {
  * 频率 -> 简谱度数 1..7 (以 C 大调白键为基准, 黑键向左吸附)
  */
 function freqToDegree(hz: number): number {
-    const midi = 69 + 12 * Math.log2(hz / 440)   // MIDI 音符号: A4(440Hz)=69
+    const midi = 69 + 12 * Math.log(hz / 440) / LOG2   // MIDI 音符号: A4(440Hz)=69
     const pc = ((Math.round(midi) % 12) + 12) % 12
     return PC_TO_DEGREE[pc]
 }
