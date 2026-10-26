@@ -1,0 +1,19 @@
+{
+    "name": "pitch-detector",
+    "version": "0.0.1",
+    "description": "micro:bit V2 音调检测：麦克风 PCM 采集 (C++/CODAL) + Goertzel 频谱扫描，LED 点阵显示简谱音调 1-7。仅支持 micro:bit V2。",
+    "dependencies": {
+        "core": "*",
+        "microphone": "*"
+    },
+    "files": [
+        "main.ts",
+        "shims.d.ts",
+        "micfft.cpp",
+        "README.md"
+    ],
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "tsprj"
+}
